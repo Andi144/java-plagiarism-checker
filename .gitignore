@@ -3,3 +3,6 @@
 /build/
 /out/
 /out/production/classes/
+
+# IDEA
+.idea
