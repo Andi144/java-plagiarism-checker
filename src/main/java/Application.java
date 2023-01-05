@@ -48,16 +48,23 @@ public class Application {
 	public static void main(String[] args) {
 		List<String> folders = extractListArg(args, "--folders", Function.identity());
 		int verbosity = extractArg(args, "--verbosity", Integer::parseInt, 0);
+		List<FolderComparison> comparisons = compare(folders, verbosity);
+		createCSV(comparisons);
+	}
+	
+	private static List<FolderComparison> compare(List<String> folders, int verbosity) {
+		List<FolderComparison> results = new ArrayList<>();
 		// TODO: parallelize
 		for (int i = 0; i < folders.size() - 1; i++) {
 			for (int j = i + 1; j < folders.size(); j++) {
-				compareFolders(folders.get(i), folders.get(j), verbosity);
+				results.add(compareFolders(folders.get(i), folders.get(j), verbosity));
 			}
 		}
+		return results;
 	}
 	
 	// TODO: replace verbosity and standard output printing with logging
-	private static void compareFolders(String folder1, String folder2, int verbosity) {
+	private static FolderComparison compareFolders(String folder1, String folder2, int verbosity) {
 		if (verbosity >= 1) {
 			System.out.println("##########################################################");
 			System.out.println("Comparing folder");
@@ -75,6 +82,8 @@ public class Application {
 		List<CtType<?>> types2 = renamer2.getTopLevelTypes();
 		
 		AstComparator comparator = new AstComparator();
+		FolderComparison folderComparison = new FolderComparison(folder1, folder2);
+		
 		for (CtType<?> type1 : types1) {
 			// TODO: hard-coded, should be parameterized via blacklist, e.g., "excludedTypeNames" and then
 			//  excludedTypeNames.stream().anyMatch(x -> x.equals(type.getSimpleName()))
@@ -166,22 +175,11 @@ public class Application {
 					.map(Pair::getLeft)
 					.orElseThrow();
 			
-			Map<String, Double> metrics = computeMetrics(type1, matchingType, renamedType1, renamer2.renameType(matchingType));
-			double avg = metrics.values().stream().mapToDouble(x -> x).average().orElseThrow();
-			System.out.printf("average = %.3f\n", avg);
-			if (avg < THRESHOLD) {
-				if (verbosity >= 1) {
-					System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-					System.out.printf("average (%.3f) is < threshold (%.3f)\n", avg, THRESHOLD);
-					System.out.println("folder1: " + folder1);
-					System.out.println("folder2: " + folder2);
-					System.out.println("type1: " + type1.getSimpleName());
-					System.out.println("type2: " + matchingType.getSimpleName());
-					System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-					System.out.println();
-				}
-			}
+			List<Pair<String, Double>> metrics = computeMetrics(type1, matchingType, renamedType1, renamer2.renameType(matchingType));
+			folderComparison.addTypeComparison(new TypeComparison(type1, matchingType, metrics));
 		}
+		
+		return folderComparison;
 	}
 	
 	private static void sortAndAddNormalized(ArrayList<Pair<CtType<?>, Integer>> diffs, Map<CtType<?>, List<Integer>> comparison) {
@@ -202,7 +200,7 @@ public class Application {
 	}
 	
 	// TODO: currently just printing without verbosity check
-	private static Map<String, Double> computeMetrics(CtType<?> type1, CtType<?> type2, CtType<?> renamedType1, CtType<?> renamedType2) {
+	private static List<Pair<String, Double>> computeMetrics(CtType<?> type1, CtType<?> type2, CtType<?> renamedType1, CtType<?> renamedType2) {
 		AstComparator comparator = new AstComparator();
 		System.out.println("Comparing '" + type1.getSimpleName() + "' to " + "'" + type2.getSimpleName() + "'");
 		Diff typeDiff = comparator.compare(type1, type2);
@@ -215,6 +213,7 @@ public class Application {
 		int count2 = countElements(type2);
 		int countDiff = Math.abs(count1 - count2);
 		System.out.println("AST element count difference: " + countDiff);
+		System.out.println();
 		
 		double typeDiffSizeMetric = (double) typeDiffSize / Math.max(count1, count2);
 		double renamedDiffSizeMetric = (double) renamedTypeDiffSize / Math.max(count1, count2);
@@ -223,18 +222,42 @@ public class Application {
 		double renamedJaccard = 1 - new JaccardSimilarity().apply(renamedType1.toString(), renamedType2.toString());
 		double jaro = 1 - new JaroWinklerSimilarity().apply(type1.toString(), type2.toString());
 		double renamedJaro = 1 - new JaroWinklerSimilarity().apply(renamedType1.toString(), renamedType2.toString());
+		// TODO: include average here as metric?
 		
-		Map<String, Double> metrics = Map.of(
-				"typeDiffSizeMetric", typeDiffSizeMetric,
-				"renamedDiffSizeMetric", renamedDiffSizeMetric,
-				"countDiffMetric", countDiffMetric,
-				"jaccard", jaccard,
-				"renamedJaccard", renamedJaccard,
-				"jaro", jaro,
-				"renamedJaro", renamedJaro);
-		metrics.forEach((key, value) -> System.out.printf("%21s: %.3f\n", key, value));
-		System.out.println();
-		return metrics;
+		return List.of(
+				Pair.of("typeDiffSizeMetric", typeDiffSizeMetric),
+				Pair.of("renamedDiffSizeMetric", renamedDiffSizeMetric),
+				Pair.of("countDiffMetric", countDiffMetric),
+				Pair.of("jaccard", jaccard),
+				Pair.of("renamedJaccard", renamedJaccard),
+				Pair.of("jaro", jaro),
+				Pair.of("renamedJaro", renamedJaro));
+	}
+	
+	private static void createCSV(List<FolderComparison> folderComparisons) {
+		// TODO: replace standard output printing with writing a CSV
+		boolean first = true;
+		for (FolderComparison fc : folderComparisons) {
+			if (first) {
+				System.out.println(fc.getCSVHeader());
+				first = false;
+			}
+			System.out.println(fc.toCSVString());
+			for (TypeComparison tc : fc.getTypeComparisons()) {
+				double avg = tc.getMetrics().stream().mapToDouble(Pair::getRight).average().orElseThrow();
+//				System.out.printf("average = %.3f\n", avg);
+//				if (avg < THRESHOLD) {
+//					System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+//					System.out.printf("average (%.3f) is < threshold (%.3f)\n", avg, THRESHOLD);
+//					System.out.println("folder1: " + folder1);
+//					System.out.println("folder2: " + folder2);
+//					System.out.println("type1: " + type1.getSimpleName());
+//					System.out.println("type2: " + matchingType.getSimpleName());
+//					System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+//					System.out.println();
+//				}
+			}
+		}
 	}
 	
 }
