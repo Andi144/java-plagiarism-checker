@@ -5,6 +5,7 @@ import org.apache.commons.text.StringEscapeUtils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.StringJoiner;
 
 public class FolderComparison {
 	
@@ -40,13 +41,13 @@ public class FolderComparison {
 	}
 	
 	String getCSVString() {
-		StringBuilder sb = new StringBuilder();
 		String escapedFolder1 = StringEscapeUtils.escapeCsv(folder1);
 		String escapedFolder2 = StringEscapeUtils.escapeCsv(folder2);
+		StringJoiner sj = new StringJoiner(System.lineSeparator());
 		for (TypeComparison tc : typeComparisons) {
-			sb.append(String.format("%s,%s,%s\n", escapedFolder1, escapedFolder2, tc.getCSVString()));
+			sj.add(String.format("%s,%s,%s", escapedFolder1, escapedFolder2, tc.getCSVString()));
 		}
-		return sb.toString();
+		return sj.toString();
 	}
 	
 }
