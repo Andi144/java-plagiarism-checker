@@ -53,7 +53,7 @@ public class Comparison {
 		FolderComparison folderComparison = new FolderComparison(folder1, folder2);
 		for (CtType<?> type1 : types1) {
 			CtType<?> matchingType = findMatchingType(type1, types2, renamer1, renamer2, verbosity);
-			List<Pair<String, Double>> metrics = computeMetrics(type1, matchingType, renamer1.renameType(type1), renamer2.renameType(matchingType));
+			List<Pair<String, Double>> metrics = computeMetrics(type1, matchingType, renamer1.renameType(type1), renamer2.renameType(matchingType), verbosity);
 			folderComparison.addTypeComparison(new TypeComparison(type1, matchingType, metrics));
 		}
 		return folderComparison;
@@ -158,21 +158,23 @@ public class Comparison {
 		return count;
 	}
 	
-	// TODO: currently just printing without verbosity check
-	private static List<Pair<String, Double>> computeMetrics(CtType<?> type1, CtType<?> type2, CtType<?> renamedType1, CtType<?> renamedType2) {
+	private static List<Pair<String, Double>> computeMetrics(CtType<?> type1, CtType<?> type2, CtType<?> renamedType1, CtType<?> renamedType2, int verbosity) {
 		AstComparator comparator = new AstComparator();
-		System.out.println("Comparing '" + type1.getSimpleName() + "' to " + "'" + type2.getSimpleName() + "'");
 		Diff typeDiff = comparator.compare(type1, type2);
 		int typeDiffSize = typeDiff.getRootOperations().size();
-		System.out.println("AST changes (before renaming): " + typeDiffSize);
 		Diff renamedTypeDiff = comparator.compare(renamedType1, renamedType2);
 		int renamedTypeDiffSize = renamedTypeDiff.getRootOperations().size();
-		System.out.println("AST changes  (after renaming): " + renamedTypeDiffSize);
 		int count1 = countElements(type1);
 		int count2 = countElements(type2);
 		int countDiff = Math.abs(count1 - count2);
-		System.out.println("AST element count difference: " + countDiff);
-		System.out.println();
+		
+		if (verbosity >= 1) {
+			System.out.println("Comparing '" + type1.getSimpleName() + "' to " + "'" + type2.getSimpleName() + "'");
+			System.out.println("AST changes (before renaming): " + typeDiffSize);
+			System.out.println("AST changes  (after renaming): " + renamedTypeDiffSize);
+			System.out.println("AST element count difference: " + countDiff);
+			System.out.println();
+		}
 		
 		// TODO: currently, all these are hard-coded; could make this more generic to allow arbitrary metrics
 		double typeDiffSizeMetric = (double) typeDiffSize / Math.max(count1, count2);
