@@ -4,6 +4,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.StringEscapeUtils;
 import spoon.reflect.declaration.CtType;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -28,7 +29,7 @@ public class TypeComparison {
 	}
 	
 	public List<Pair<String, Double>> getMetrics() {
-		return metrics;
+		return Collections.unmodifiableList(metrics);
 	}
 	
 	String getCSVHeader() {
