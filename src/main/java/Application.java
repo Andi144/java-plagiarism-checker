@@ -193,7 +193,6 @@ public class Application {
 		double renamedJaccard = 1 - new JaccardSimilarity().apply(renamedType1.toString(), renamedType2.toString());
 		double jaro = 1 - new JaroWinklerSimilarity().apply(type1.toString(), type2.toString());
 		double renamedJaro = 1 - new JaroWinklerSimilarity().apply(renamedType1.toString(), renamedType2.toString());
-		// TODO: include average here as metric?
 		
 		return List.of(
 				Pair.of("typeDiffSizeMetric", typeDiffSizeMetric),
