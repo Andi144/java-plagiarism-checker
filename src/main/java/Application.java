@@ -19,8 +19,10 @@ public class Application {
 		Path csvPath = ArgParsing.extractArg(args, "--csvPath", Path::of);
 		double avgThreshold = ArgParsing.extractArg(args, "--avgThreshold", Double::parseDouble);
 		int verbosity = ArgParsing.extractArg(args, "--verbosity", Integer::parseInt, 0);
+		
 		List<FolderComparison> comparisons = Comparison.compare(folders, excludedTypeNames, verbosity);
 		CSVCreation.createCSV(comparisons, csvPath); // not necessary but useful for external usage
+		
 		PlagiarismDetector pd = new PlagiarismDetector(new AvgPlagiarismDetection(avgThreshold));
 		List<FolderComparison> detected = pd.detectPlagiarism(comparisons);
 		for (FolderComparison fc : detected) {
