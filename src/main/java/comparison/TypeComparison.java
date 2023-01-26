@@ -1,3 +1,5 @@
+package comparison;
+
 import org.apache.commons.lang3.tuple.Pair;
 import spoon.reflect.declaration.CtType;
 
@@ -6,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
-// TODO: maybe include folders here as well and drop FolderComparison (so that this here becomes a complete "CSV row")
+// TODO: maybe include folders here as well and drop comparison.FolderComparison (so that this here becomes a complete "CSV row")
 public class TypeComparison {
 	
 	private final CtType<?> type1;
@@ -31,6 +33,7 @@ public class TypeComparison {
 		return metrics;
 	}
 	
+	// TODO: maybe move this method to a static util method, so comparison.TypeComparison is really only a data object
 	public String getCSVHeader() {
 		StringBuilder sb = new StringBuilder("type1,type2");
 		metrics.forEach(pair -> {

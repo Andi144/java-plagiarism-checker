@@ -1,3 +1,6 @@
+import ast.ASTRenamer;
+import comparison.FolderComparison;
+import comparison.TypeComparison;
 import gumtree.spoon.AstComparator;
 import gumtree.spoon.diff.Diff;
 import org.apache.commons.lang3.tuple.Pair;

@@ -1,3 +1,5 @@
+package ast;
+
 import spoon.Launcher;
 import spoon.refactoring.CtRenameGenericVariableRefactoring;
 import spoon.refactoring.Refactoring;
@@ -73,7 +75,7 @@ public class ASTRenamer {
 	
 	// TODO: maybe put "path" into "rename" method, so the same renaming settings can be used for multiple files, and
 	//  then return the model in "rename"; also, this would mean that we lose the state, so methods like "toString" and
-	//  "getTopLevelTypes" would not make sense afterwards anymore (ASTRenamer is stateless w.r.t. to the renamed models)
+	//  "getTopLevelTypes" would not make sense afterwards anymore (ast.ASTRenamer is stateless w.r.t. to the renamed models)
 	public ASTRenamer(
 			String path, boolean keepComments,
 			boolean includeTypeCount, boolean includeFieldCount, boolean includeMethodCount, boolean includeParameterCount, boolean includeLocalVariableCount,

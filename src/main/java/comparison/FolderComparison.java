@@ -1,3 +1,5 @@
+package comparison;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -31,7 +33,7 @@ public class FolderComparison {
 	}
 	
 	public String getCSVHeader() {
-		// TypeComparison header should be the same for every object
+		// comparison.TypeComparison header should be the same for every object
 		return String.format("folder1,folder2,%s", typeComparisons.get(0).getCSVHeader());
 	}
 	
