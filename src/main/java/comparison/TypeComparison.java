@@ -36,7 +36,7 @@ public class TypeComparison {
 		StringBuilder sb = new StringBuilder("type1,type2");
 		metrics.forEach(pair -> {
 			sb.append(",");
-			sb.append(pair.getLeft());
+			sb.append(StringEscapeUtils.escapeCsv(pair.getLeft()));
 		});
 		return sb.toString();
 	}
