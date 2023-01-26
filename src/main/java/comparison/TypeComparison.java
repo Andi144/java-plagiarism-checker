@@ -1,11 +1,10 @@
 package comparison;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.text.StringEscapeUtils;
 import spoon.reflect.declaration.CtType;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.StringJoiner;
 
 // TODO: maybe include folders here as well and drop comparison.FolderComparison (so that this here becomes a complete "CSV row")
@@ -33,8 +32,7 @@ public class TypeComparison {
 		return metrics;
 	}
 	
-	// TODO: maybe move this method to a static util method, so comparison.TypeComparison is really only a data object
-	public String getCSVHeader() {
+	String getCSVHeader() {
 		StringBuilder sb = new StringBuilder("type1,type2");
 		metrics.forEach(pair -> {
 			sb.append(",");
@@ -43,10 +41,11 @@ public class TypeComparison {
 		return sb.toString();
 	}
 	
-	public String toCSVString() {
+	String getCSVString() {
 		StringJoiner sj = new StringJoiner(",");
-		sj.add(type1.getSimpleName()).add(type2.getSimpleName());
-		metrics.forEach(pair -> sj.add(pair.getRight().toString()));
+		sj.add(StringEscapeUtils.escapeCsv(type1.getSimpleName()));
+		sj.add(StringEscapeUtils.escapeCsv(type2.getSimpleName()));
+		metrics.forEach(pair -> sj.add(StringEscapeUtils.escapeCsv(pair.getRight().toString())));
 		return sj.toString();
 	}
 	

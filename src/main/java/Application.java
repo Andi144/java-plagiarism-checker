@@ -1,4 +1,5 @@
 import ast.ASTRenamer;
+import comparison.CSVCreation;
 import comparison.FolderComparison;
 import comparison.TypeComparison;
 import gumtree.spoon.AstComparator;
@@ -11,6 +12,8 @@ import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtType;
 import util.ArgParsing;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.*;
 
 public class Application {
@@ -21,12 +24,13 @@ public class Application {
 	//  implementation (strategy pattern) "interface PlagDetection { boolean isPlag(Map<String, Double> metrics) }")
 	private static final double THRESHOLD = 0.05;
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		List<String> folders = ArgParsing.extractListArg(args, "--folders");
 		Set<String> excludedTypeNames = ArgParsing.extractSetArg(args, "--excludedTypeNames");
+		Path csvPath = ArgParsing.extractArg(args, "--csvPath", Path::of);
 		int verbosity = ArgParsing.extractArg(args, "--verbosity", Integer::parseInt, 0);
 		List<FolderComparison> comparisons = compare(folders, excludedTypeNames, verbosity);
-		createCSV(comparisons);
+		CSVCreation.createCSV(comparisons, csvPath);
 	}
 	
 	private static List<FolderComparison> compare(List<String> folders, Set<String> excludedTypeNames, int verbosity) {
@@ -199,32 +203,6 @@ public class Application {
 				Pair.of("renamedJaccard", renamedJaccard),
 				Pair.of("jaro", jaro),
 				Pair.of("renamedJaro", renamedJaro));
-	}
-	
-	private static void createCSV(List<FolderComparison> folderComparisons) {
-		// TODO: replace standard output printing with writing a CSV
-		boolean first = true;
-		for (FolderComparison fc : folderComparisons) {
-			if (first) {
-				System.out.println(fc.getCSVHeader());
-				first = false;
-			}
-			System.out.println(fc.toCSVString());
-			for (TypeComparison tc : fc.getTypeComparisons()) {
-				double avg = tc.getMetrics().stream().mapToDouble(Pair::getRight).average().orElseThrow();
-//				System.out.printf("average = %.3f\n", avg);
-//				if (avg < THRESHOLD) {
-//					System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-//					System.out.printf("average (%.3f) is < threshold (%.3f)\n", avg, THRESHOLD);
-//					System.out.println("folder1: " + folder1);
-//					System.out.println("folder2: " + folder2);
-//					System.out.println("type1: " + type1.getSimpleName());
-//					System.out.println("type2: " + matchingType.getSimpleName());
-//					System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-//					System.out.println();
-//				}
-			}
-		}
 	}
 	
 }

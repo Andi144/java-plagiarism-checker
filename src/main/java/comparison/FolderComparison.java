@@ -1,5 +1,7 @@
 package comparison;
 
+import org.apache.commons.text.StringEscapeUtils;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -32,15 +34,17 @@ public class FolderComparison {
 		typeComparisons.add(typeComparison);
 	}
 	
-	public String getCSVHeader() {
-		// comparison.TypeComparison header should be the same for every object
+	String getCSVHeader() {
+		// TypeComparison header should be the same for every object
 		return String.format("folder1,folder2,%s", typeComparisons.get(0).getCSVHeader());
 	}
 	
-	public String toCSVString() {
+	String getCSVString() {
 		StringBuilder sb = new StringBuilder();
+		String escapedFolder1 = StringEscapeUtils.escapeCsv(folder1);
+		String escapedFolder2 = StringEscapeUtils.escapeCsv(folder2);
 		for (TypeComparison tc : typeComparisons) {
-			sb.append(String.format("%s,%s,%s\n", folder1, folder2, tc.toCSVString()));
+			sb.append(String.format("%s,%s,%s\n", escapedFolder1, escapedFolder2, tc.getCSVString()));
 		}
 		return sb.toString();
 	}

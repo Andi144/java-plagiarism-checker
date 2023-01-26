@@ -9,6 +9,10 @@ public class ArgParsing {
 	private ArgParsing() {
 	}
 	
+	public static <E> E extractArg(String[] args, String arg, Function<String, E> transformer) {
+		return extractArg(args, arg, transformer, null);
+	}
+	
 	public static <E> E extractArg(String[] args, String arg, Function<String, E> transformer, E defaultVal) {
 		// TODO: assumes arg-pairs: [arg_name_1, arg_value_1, ..., arg_name_n, arg_value_n]
 		for (int i = 0; i < args.length; i++) {
