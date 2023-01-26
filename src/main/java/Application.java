@@ -6,9 +6,9 @@ import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 import org.apache.commons.text.similarity.LevenshteinDistance;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtType;
+import util.ArgParsing;
 
 import java.util.*;
-import java.util.function.Function;
 
 public class Application {
 	
@@ -18,37 +18,10 @@ public class Application {
 	//  implementation (strategy pattern) "interface PlagDetection { boolean isPlag(Map<String, Double> metrics) }")
 	private static final double THRESHOLD = 0.05;
 	
-	private static <E> E extractArg(String[] args, String arg, Function<String, E> transformer, E defaultVal) {
-		// TODO: assumes arg-pairs: [arg_name_1, arg_value_1, ..., arg_name_n, arg_value_n]
-		for (int i = 0; i < args.length; i++) {
-			if (args[i].equals(arg)) {
-				return transformer.apply(args[i + 1]);
-			}
-		}
-		if (defaultVal != null) {
-			return defaultVal;
-		}
-		throw new IllegalArgumentException("Argument " + arg + " could not be found");
-	}
-	
-	private static <E> List<E> extractListArg(String[] args, String arg, Function<String, E> transformer) {
-		for (int i = 0; i < args.length; i++) {
-			if (args[i].equals(arg)) {
-				// assume all following args are list values until we encounter "-XYZ" or "--XYZ", i.e., a new argument
-				List<E> list = new ArrayList<>();
-				for (int j = i + 1; j < args.length && !args[j].startsWith("-") && !args[j].startsWith("--"); j++) {
-					list.add(transformer.apply(args[j]));
-				}
-				return Collections.unmodifiableList(list);
-			}
-		}
-		throw new IllegalArgumentException("Argument " + arg + " could not be found");
-	}
-	
 	public static void main(String[] args) {
-		List<String> folders = extractListArg(args, "--folders", Function.identity());
-		Set<String> excludedTypeNames = Set.of("In", "Out"); // TODO: hard-coded, solve via arg
-		int verbosity = extractArg(args, "--verbosity", Integer::parseInt, 0);
+		List<String> folders = ArgParsing.extractListArg(args, "--folders");
+		Set<String> excludedTypeNames = ArgParsing.extractSetArg(args, "--excludedTypeNames");
+		int verbosity = ArgParsing.extractArg(args, "--verbosity", Integer::parseInt, 0);
 		List<FolderComparison> comparisons = compare(folders, excludedTypeNames, verbosity);
 		createCSV(comparisons);
 	}
