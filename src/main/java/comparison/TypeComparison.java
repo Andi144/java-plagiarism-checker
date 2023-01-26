@@ -7,7 +7,6 @@ import spoon.reflect.declaration.CtType;
 import java.util.List;
 import java.util.StringJoiner;
 
-// TODO: maybe include folders here as well and drop comparison.FolderComparison (so that this here becomes a complete "CSV row")
 public class TypeComparison {
 	
 	private final CtType<?> type1;
