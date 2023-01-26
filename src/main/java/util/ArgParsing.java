@@ -4,6 +4,8 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+// TODO: currently static-only, which requires every method to fully parse the entire args-array (should replace with
+//  object-oriented design to keep track of all arguments and only requiring one parsing pass)
 public class ArgParsing {
 	
 	private ArgParsing() {
