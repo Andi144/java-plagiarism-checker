@@ -186,6 +186,7 @@ public class Application {
 		System.out.println("AST element count difference: " + countDiff);
 		System.out.println();
 		
+		// TODO: currently, all these are hard-coded; could make this more generic to allow arbitrary metrics
 		double typeDiffSizeMetric = (double) typeDiffSize / Math.max(count1, count2);
 		double renamedDiffSizeMetric = (double) renamedTypeDiffSize / Math.max(count1, count2);
 		double countDiffMetric = (double) countDiff / Math.max(count1, count2);
