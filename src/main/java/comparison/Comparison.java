@@ -14,6 +14,8 @@ import java.util.*;
 
 // TODO: currently static-only; might change to object-oriented design which would also get rid of the many "carry-over"
 //  parameters of all the different methods
+// TODO: also, naming is suboptimal (indicates that FolderComparison and TypeComparison could be subclasses, which they
+//  are not. this might be solved with the above comment by replacing the code with OO design and a new class name)
 public class Comparison {
 	
 	private Comparison() {
