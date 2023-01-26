@@ -47,24 +47,25 @@ public class Application {
 	
 	public static void main(String[] args) {
 		List<String> folders = extractListArg(args, "--folders", Function.identity());
+		Set<String> excludedTypeNames = Set.of("In", "Out"); // TODO: hard-coded, solve via arg
 		int verbosity = extractArg(args, "--verbosity", Integer::parseInt, 0);
-		List<FolderComparison> comparisons = compare(folders, verbosity);
+		List<FolderComparison> comparisons = compare(folders, excludedTypeNames, verbosity);
 		createCSV(comparisons);
 	}
 	
-	private static List<FolderComparison> compare(List<String> folders, int verbosity) {
+	private static List<FolderComparison> compare(List<String> folders, Set<String> excludedTypeNames, int verbosity) {
 		List<FolderComparison> results = new ArrayList<>();
 		// TODO: parallelize
 		for (int i = 0; i < folders.size() - 1; i++) {
 			for (int j = i + 1; j < folders.size(); j++) {
-				results.add(compareFolders(folders.get(i), folders.get(j), verbosity));
+				results.add(compareFolders(folders.get(i), folders.get(j), excludedTypeNames, verbosity));
 			}
 		}
 		return results;
 	}
 	
 	// TODO: replace verbosity and standard output printing with logging
-	private static FolderComparison compareFolders(String folder1, String folder2, int verbosity) {
+	private static FolderComparison compareFolders(String folder1, String folder2, Set<String> excludedTypeNames, int verbosity) {
 		if (verbosity >= 1) {
 			System.out.println("##########################################################");
 			System.out.println("Comparing folder");
@@ -78,25 +79,15 @@ public class Application {
 		ASTRenamer renamer2 = new ASTRenamer(folder2, false, false);
 //		renamer1.rename();
 //		renamer2.rename();
-		List<CtType<?>> types1 = renamer1.getTopLevelTypes();
-		List<CtType<?>> types2 = renamer2.getTopLevelTypes();
-		// TODO: remove excluded type names already here, so we do not unnecessarily iterate through them in the for loops
-		
+		List<CtType<?>> types1 = renamer1.getTopLevelTypes().stream().filter(t -> !excludedTypeNames.contains(t.getSimpleName())).toList();
+		List<CtType<?>> types2 = renamer2.getTopLevelTypes().stream().filter(t -> !excludedTypeNames.contains(t.getSimpleName())).toList();
 		
 		FolderComparison folderComparison = new FolderComparison(folder1, folder2);
-		
 		for (CtType<?> type1 : types1) {
-			// TODO: hard-coded, should be parameterized via blacklist, e.g., "excludedTypeNames" and then
-			//  excludedTypeNames.stream().anyMatch(x -> x.equals(type.getSimpleName()))
-			if (type1.getSimpleName().equals("In") || type1.getSimpleName().equals("Out")) {
-				continue;
-			}
-			
 			CtType<?> matchingType = findMatchingType(type1, types2, renamer1, renamer2, verbosity);
 			List<Pair<String, Double>> metrics = computeMetrics(type1, matchingType, renamer1.renameType(type1), renamer2.renameType(matchingType));
 			folderComparison.addTypeComparison(new TypeComparison(type1, matchingType, metrics));
 		}
-		
 		return folderComparison;
 	}
 	
@@ -116,12 +107,6 @@ public class Application {
 			System.out.println("Comparing '" + type1.getSimpleName() + "'");
 		}
 		for (CtType<?> type2 : types2) {
-			// TODO: hard-coded, should be parameterized via blacklist, e.g., "excludedTypeNames" and then
-			//  excludedTypeNames.stream().anyMatch(x -> x.equals(type.getSimpleName()))
-			if (type2.getSimpleName().equals("In") || type2.getSimpleName().equals("Out")) {
-				continue;
-			}
-			
 			comparison.put(type2, new ArrayList<>());
 			
 			Diff typeDiff = comparator.compare(type1, type2);
