@@ -34,6 +34,7 @@ public class Application {
 				System.out.println("|------- " + tc.getType1().getSimpleName());
 				System.out.println("|------- " + tc.getType2().getSimpleName());
 			}
+			System.out.println();
 		}
 	}
 	
