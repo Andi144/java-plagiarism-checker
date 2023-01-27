@@ -4,7 +4,7 @@ import comparison.FolderComparison;
 import comparison.TypeComparison;
 import detection.AvgPlagiarismDetection;
 import detection.PlagiarismDetector;
-import util.ArgParsing;
+import util.ArgumentParser;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -14,15 +14,25 @@ import java.util.Set;
 public class Application {
 	
 	public static void main(String[] args) throws IOException {
-		List<String> folders = ArgParsing.extractListArg(args, "--folders");
-		Set<String> excludedTypeNames = ArgParsing.extractSetArg(args, "--excludedTypeNames");
-		Path csvPath = ArgParsing.extractArg(args, "--csvPath", Path::of);
-		double avgThreshold = ArgParsing.extractArg(args, "--avgThreshold", Double::parseDouble);
-		int verbosity = ArgParsing.extractArg(args, "--verbosity", Integer::parseInt, 0);
+		ArgumentParser ap = new ArgumentParser();
+		ap.addListArgument("--folders");
+		ap.addSetArgument("--excludedTypeNames");
+		ap.addArgument("--csvPath", Path::of, null);
+		ap.addArgument("--avgThreshold", Double::parseDouble);
+		ap.addArgument("--verbosity", Integer::parseInt, 0);
+		ap.parse(args);
 		
+		List<String> folders = ap.get("--folders");
+		Set<String> excludedTypeNames = ap.get("--excludedTypeNames");
+		int verbosity = ap.get("--verbosity");
 		List<FolderComparison> comparisons = Comparison.compare(folders, excludedTypeNames, verbosity);
-		CSVCreation.createCSV(comparisons, csvPath); // not necessary but useful for external usage
 		
+		Path csvPath = ap.get("--csvPath");
+		if (csvPath != null) {
+			CSVCreation.createCSV(comparisons, csvPath); // not necessary but useful for external usage
+		}
+		
+		double avgThreshold = ap.get("--avgThreshold");
 		PlagiarismDetector pd = new PlagiarismDetector(new AvgPlagiarismDetection(avgThreshold));
 		List<FolderComparison> detected = pd.detectPlagiarism(comparisons);
 		for (FolderComparison fc : detected) {
