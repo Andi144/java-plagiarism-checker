@@ -34,9 +34,9 @@ public class PlagiarismDetector {
 	public List<FolderComparison> detectPlagiarism(List<FolderComparison> comparisons) {
 		List<FolderComparison> detected = new ArrayList<>();
 		for (FolderComparison fc : comparisons) {
-			// do not change the passed FolderComparison objects, so create a copy and only add those
-			// TypeComparisons that were identified as plagiarism (and only collect a FolderComparison
-			// if there is at least one such identification of plagiarism)
+			// Do not change the passed FolderComparison objects, so create a copy and only add those TypeComparisons
+			// that were identified as plagiarism (and only collect a FolderComparison if there is at least one such
+			// identification of plagiarism)
 			boolean found = false;
 			FolderComparison fcCopy = new FolderComparison(fc.getFolder1(), fc.getFolder2());
 			for (TypeComparison tc : fc.getTypeComparisons()) {
