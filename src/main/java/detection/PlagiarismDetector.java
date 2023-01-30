@@ -22,6 +22,15 @@ public class PlagiarismDetector {
 		this.plagiarismDetection = plagiarismDetection;
 	}
 	
+	/**
+	 * For the specified <code>comparisons</code>, returns those where the currently set {@link PlagiarismDetector}
+	 * detected plagiarism. A copy will be returned, i.e., the passed <code>comparisons</code> object is not changed.
+	 *
+	 * @param comparisons The comparisons to check for plagiarism
+	 * @return A (sub)list of <code>comparisons</code> where plagiarism was detected
+	 * @see #PlagiarismDetector(PlagiarismDetection)
+	 * @see #setPlagiarismDetection(PlagiarismDetection)
+	 */
 	public List<FolderComparison> detectPlagiarism(List<FolderComparison> comparisons) {
 		List<FolderComparison> detected = new ArrayList<>();
 		for (FolderComparison fc : comparisons) {
