@@ -5,6 +5,7 @@ import comparison.TypeComparison;
 import detection.AvgPlagiarismDetection;
 import detection.PlagiarismDetector;
 import util.ArgumentParser;
+import util.SubmissionUnpacking;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -15,6 +16,7 @@ public class Application {
 	
 	public static void main(String[] args) throws IOException {
 		ArgumentParser ap = new ArgumentParser();
+		ap.addArgument("--submissionsZip", Path::of, null);
 		ap.addListArgument("--folders");
 		ap.addSetArgument("--excludedTypeNames");
 		ap.addArgument("--csvPath", Path::of, null);
@@ -22,7 +24,14 @@ public class Application {
 		ap.addArgument("--verbosity", Integer::parseInt, 0);
 		ap.parse(args);
 		
-		List<String> folders = ap.get("--folders");
+		// TODO: mutual exclusion of --submissionsZip and --folders not yet handled (--submissionsZip simply takes precedence)
+		List<String> folders;
+		Path submissionsZip = ap.get("--submissionsZip");
+		if (submissionsZip != null) {
+			folders = SubmissionUnpacking.unpackMoodleSubmissions(submissionsZip);
+		} else {
+			folders = ap.get("--folders");
+		}
 		Set<String> excludedTypeNames = ap.get("--excludedTypeNames");
 		int verbosity = ap.get("--verbosity");
 		List<FolderComparison> comparisons = Comparison.compare(folders, excludedTypeNames, verbosity);
