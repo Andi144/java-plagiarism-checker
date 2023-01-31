@@ -3,6 +3,7 @@ package comparison;
 import ast.ASTRenamer;
 import gumtree.spoon.AstComparator;
 import gumtree.spoon.diff.Diff;
+import me.tongfei.progressbar.ProgressBar;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.similarity.JaccardSimilarity;
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
@@ -22,14 +23,19 @@ public class Comparison {
 	}
 	
 	public static List<FolderComparison> compare(List<String> folders, Set<String> excludedTypeNames, int verbosity) {
-		List<FolderComparison> results = new ArrayList<>();
-		// TODO: parallelize
+		List<Pair<String, String>> folderPairs = new ArrayList<>();
 		for (int i = 0; i < folders.size() - 1; i++) {
 			for (int j = i + 1; j < folders.size(); j++) {
-				results.add(compareFolders(folders.get(i), folders.get(j), excludedTypeNames, verbosity));
+				folderPairs.add(Pair.of(folders.get(i), folders.get(j)));
 			}
 		}
-		return results;
+		try (ProgressBar pb = new ProgressBar("Comparing folders", folderPairs.size())) {
+			return folderPairs.parallelStream().map(p -> {
+				FolderComparison comparison = compareFolders(p.getLeft(), p.getRight(), excludedTypeNames, verbosity);
+				pb.step();
+				return comparison;
+			}).toList();
+		}
 	}
 	
 	// TODO: replace verbosity and standard output printing with logging
