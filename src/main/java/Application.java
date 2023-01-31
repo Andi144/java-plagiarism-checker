@@ -22,9 +22,9 @@ public class Application {
 		ap.addArgument("--csvPath", Path::of, null);
 		ap.addArgument("--avgThreshold", Double::parseDouble);
 		ap.addArgument("--verbosity", Integer::parseInt, 0);
+		ap.addMutuallyExclusiveArguments("--submissionsZip", "--folders");
 		ap.parse(args);
 		
-		// TODO: mutual exclusion of --submissionsZip and --folders not yet handled (--submissionsZip simply takes precedence)
 		List<String> folders;
 		Path submissionsZip = ap.get("--submissionsZip");
 		if (submissionsZip != null) {

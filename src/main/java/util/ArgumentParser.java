@@ -149,10 +149,16 @@ public class ArgumentParser {
 	 * {@link #parse(String[])}.
 	 */
 	private final Map<String, Object> parsedArguments;
+	/**
+	 * A list of argument name groups, where each such group defines a set of argument names that must not occur
+	 * together, i.e., a set of mutually exclusive arguments.
+	 */
+	private final List<Set<String>> mutuallyExclusiveGroups;
 	
 	public ArgumentParser() {
 		arguments = new HashMap<>();
 		parsedArguments = new HashMap<>();
+		mutuallyExclusiveGroups = new ArrayList<>();
 	}
 	
 	/**
@@ -285,9 +291,22 @@ public class ArgumentParser {
 	}
 	
 	/**
+	 * Adds a mutually exclusive group of arguments. Argument names specified here must not occur together.
+	 *
+	 * @param names The argument names that should form a mutually exclusive group
+	 */
+	public void addMutuallyExclusiveArguments(String... names) {
+		if (names.length < 2) {
+			throw new IllegalArgumentException("mutual exclusivity can only be specified for at least two arguments");
+		}
+		mutuallyExclusiveGroups.add(Set.of(names));
+	}
+	
+	/**
 	 * Parses the specified command line arguments <code>args</code> using all the arguments that were added before (see
-	 * {@link #addArgument(String, Function)} and all other similar methods that add arguments). After having invoked
-	 * this method, the parsed argument values can be retrieved with {@link #get(String)}.
+	 * {@link #addArgument(String, Function)} and all other similar methods that add arguments). If mutually exclusive
+	 * arguments have been specified with {@link #addMutuallyExclusiveArguments(String...)}, then this is also checked.
+	 * After having invoked this method, the parsed argument values can be retrieved with {@link #get(String)}.
 	 *
 	 * @param args The command line arguments to parse
 	 */
@@ -297,14 +316,26 @@ public class ArgumentParser {
 		// arguments), use default values as per Argument.getDefault()
 		Map<String, Argument<?>> remainingArguments = new HashMap<>(arguments);
 		parsedArguments.clear();
+		// Only a single argument name (value) of a mutually exclusive group (key) can be specified
+		Map<Set<String>, String> nameFromMutuallyExclusiveGroup = new HashMap<>();
 		int i = 0;
 		while (i < args.length) {
 			String name = args[i];
 			if (!arguments.containsKey(name)) {
-				throw new IllegalArgumentException("unrecognized argument: " + name);
+				throw new IllegalArgumentException("specification of unrecognized argument: " + name);
 			}
 			if (parsedArguments.containsKey(name)) {
 				throw new IllegalArgumentException("duplicate argument specification: " + name);
+			}
+			for (Set<String> mutuallyExclusiveGroup : mutuallyExclusiveGroups) {
+				if (mutuallyExclusiveGroup.contains(name)) {
+					if (nameFromMutuallyExclusiveGroup.containsKey(mutuallyExclusiveGroup)) {
+						String alreadyDefinedName = nameFromMutuallyExclusiveGroup.get(mutuallyExclusiveGroup);
+						throw new IllegalArgumentException("specification of mutually exclusive arguments: " + name +
+								", " + alreadyDefinedName + " (part of group: " + mutuallyExclusiveGroup + ")");
+					}
+					nameFromMutuallyExclusiveGroup.put(mutuallyExclusiveGroup, name);
+				}
 			}
 			remainingArguments.remove(name);
 			Pair<Integer, ?> transformed = arguments.get(name).extract(i, args);
