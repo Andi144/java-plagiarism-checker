@@ -89,6 +89,7 @@ public class ASTRenamer {
 		// the compliance level should be set to the java version targeted by the input resources, e.g. Java 17
 		launcher.getEnvironment().setComplianceLevel(17);
 		launcher.getEnvironment().setCommentEnabled(keepComments);
+		launcher.getEnvironment().setIgnoreDuplicateDeclarations(true);
 		launcher.buildModel();
 		model = launcher.getModel();
 		
