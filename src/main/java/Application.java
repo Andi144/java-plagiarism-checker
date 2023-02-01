@@ -50,8 +50,8 @@ public class Application {
 			System.out.println("|--- " + fc.getFolder2());
 			for (TypeComparison tc : fc.getTypeComparisons()) {
 				System.out.println("|--- DETECTED TYPES");
-				System.out.println("|------- " + tc.getType1().getSimpleName());
-				System.out.println("|------- " + tc.getType2().getSimpleName());
+				System.out.println("|------- " + tc.getType1());
+				System.out.println("|------- " + tc.getType2());
 			}
 			System.out.println();
 		}

@@ -65,7 +65,7 @@ public class Comparison {
 		for (CtType<?> type1 : types1) {
 			CtType<?> matchingType = findMatchingType(type1, types2, renamer1, renamer2, verbosity);
 			List<Pair<String, Double>> metrics = computeMetrics(type1, matchingType, renamer1.renameType(type1), renamer2.renameType(matchingType), verbosity);
-			folderComparison.addTypeComparison(new TypeComparison(type1, matchingType, metrics));
+			folderComparison.addTypeComparison(new TypeComparison(type1.getSimpleName(), matchingType.getSimpleName(), metrics));
 		}
 		return folderComparison;
 	}

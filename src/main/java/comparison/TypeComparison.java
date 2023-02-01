@@ -10,21 +10,21 @@ import java.util.StringJoiner;
 
 public class TypeComparison {
 	
-	private final CtType<?> type1;
-	private final CtType<?> type2;
+	private final String type1;
+	private final String type2;
 	private final List<Pair<String, Double>> metrics;
 	
-	public TypeComparison(CtType<?> type1, CtType<?> type2, List<Pair<String, Double>> metrics) {
+	public TypeComparison(String type1, String type2, List<Pair<String, Double>> metrics) {
 		this.type1 = type1;
 		this.type2 = type2;
 		this.metrics = metrics;
 	}
 	
-	public CtType<?> getType1() {
+	public String getType1() {
 		return type1;
 	}
 	
-	public CtType<?> getType2() {
+	public String getType2() {
 		return type2;
 	}
 	
@@ -43,8 +43,8 @@ public class TypeComparison {
 	
 	String getCSVString() {
 		StringJoiner sj = new StringJoiner(",");
-		sj.add(StringEscapeUtils.escapeCsv(type1.getSimpleName()));
-		sj.add(StringEscapeUtils.escapeCsv(type2.getSimpleName()));
+		sj.add(StringEscapeUtils.escapeCsv(type1));
+		sj.add(StringEscapeUtils.escapeCsv(type2));
 		metrics.forEach(pair -> sj.add(StringEscapeUtils.escapeCsv(pair.getRight().toString())));
 		return sj.toString();
 	}
