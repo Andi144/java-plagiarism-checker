@@ -17,8 +17,8 @@ public class Application {
 	public static void main(String[] args) throws IOException {
 		ArgumentParser ap = new ArgumentParser();
 		ap.addArgument("--submissionsZip", Path::of, null);
-		ap.addListArgument("--folders");
-		ap.addSetArgument("--excludedTypeNames");
+		ap.addListArgument("--folders", (List<String>) null);
+		ap.addSetArgument("--excludedTypeNames", Set.of());
 		ap.addArgument("--csvPath", Path::of, null);
 		ap.addArgument("--avgThreshold", Double::parseDouble);
 		ap.addArgument("--verbosity", Integer::parseInt, 0);

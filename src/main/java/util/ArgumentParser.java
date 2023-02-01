@@ -120,6 +120,22 @@ public class ArgumentParser {
 		
 	}
 	
+	private class DefaultCollectionArgument<E, C extends Collection<E>> extends CollectionArgument<E, C> {
+		
+		final C defaultValue;
+		
+		DefaultCollectionArgument(String name, Function<String, E> typeConverter, Supplier<C> collectionSupplier, C defaultValue) {
+			super(name, typeConverter, collectionSupplier);
+			this.defaultValue = defaultValue;
+		}
+		
+		@Override
+		C getDefault() {
+			return defaultValue;
+		}
+		
+	}
+	
 	private static class BooleanArgument extends Argument<Boolean> {
 		
 		BooleanArgument(String name) {
@@ -227,6 +243,29 @@ public class ArgumentParser {
 	}
 	
 	/**
+	 * Adds an optional string list argument, i.e., an argument which contains multiple string values that are stored in
+	 * a list.
+	 *
+	 * @param name         The name of the argument
+	 * @param defaultValue The default string list if the argument is not specified
+	 */
+	public void addListArgument(String name, List<String> defaultValue) {
+		addListArgument(name, Function.identity(), defaultValue);
+	}
+	
+	/**
+	 * Adds an optional list argument, i.e., an argument which contains multiple values that are stored in a list.
+	 *
+	 * @param name          The name of the argument
+	 * @param typeConverter The function to parse the individual list values
+	 * @param <E>           The type of the individual list values
+	 * @param defaultValue  The default list if the argument is not specified
+	 */
+	public <E> void addListArgument(String name, Function<String, E> typeConverter, List<E> defaultValue) {
+		addCollectionArgument(name, typeConverter, ArrayList::new, defaultValue);
+	}
+	
+	/**
 	 * Adds a required string set argument, i.e., an argument which contains multiple string values that are stored in a
 	 * set.
 	 *
@@ -245,6 +284,29 @@ public class ArgumentParser {
 	 */
 	public <E> void addSetArgument(String name, Function<String, E> typeConverter) {
 		addCollectionArgument(name, typeConverter, HashSet::new);
+	}
+	
+	/**
+	 * Adds an optional string set argument, i.e., an argument which contains multiple string values that are stored in
+	 * a set.
+	 *
+	 * @param name         The name of the argument
+	 * @param defaultValue The default string set if the argument is not specified
+	 */
+	public void addSetArgument(String name, Set<String> defaultValue) {
+		addSetArgument(name, Function.identity(), defaultValue);
+	}
+	
+	/**
+	 * Adds an optional set argument, i.e., an argument which contains multiple values that are stored in a set.
+	 *
+	 * @param name          The name of the argument
+	 * @param typeConverter The function to parse the individual set values
+	 * @param defaultValue  The default set if the argument is not specified
+	 * @param <E>           The type of the individual set values
+	 */
+	public <E> void addSetArgument(String name, Function<String, E> typeConverter, Set<E> defaultValue) {
+		addCollectionArgument(name, typeConverter, HashSet::new, defaultValue);
 	}
 	
 	/**
@@ -271,6 +333,22 @@ public class ArgumentParser {
 	public <E, C extends Collection<E>> void addCollectionArgument(String name, Function<String, E> typeConverter, Supplier<C> collectionSupplier) {
 		ensureNewArgumentName(name);
 		arguments.put(name, new CollectionArgument<>(name, typeConverter, collectionSupplier));
+	}
+	
+	/**
+	 * Adds an optional collection argument, i.e., an argument which contains multiple values that are stored in a
+	 * specified collection.
+	 *
+	 * @param name               The name of the argument
+	 * @param typeConverter      The function to parse the individual collection values
+	 * @param collectionSupplier The function to provide a collection container
+	 * @param defaultValue       The default collection if the argument is not specified
+	 * @param <E>                The type of the individual collection values
+	 * @param <C>                The type of the collection
+	 */
+	public <E, C extends Collection<E>> void addCollectionArgument(String name, Function<String, E> typeConverter, Supplier<C> collectionSupplier, C defaultValue) {
+		ensureNewArgumentName(name);
+		arguments.put(name, new DefaultCollectionArgument<>(name, typeConverter, collectionSupplier, defaultValue));
 	}
 	
 	/**
