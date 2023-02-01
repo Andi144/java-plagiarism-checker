@@ -5,14 +5,13 @@ import spoon.refactoring.CtRenameGenericVariableRefactoring;
 import spoon.refactoring.Refactoring;
 import spoon.reflect.CtModel;
 import spoon.reflect.code.CtLocalVariable;
-import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.declaration.CtConstructor;
+import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtType;
+import spoon.reflect.declaration.CtTypeMember;
 import spoon.reflect.visitor.filter.TypeFilter;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.function.BiConsumer;
 
 public class ASTRenamer {
@@ -46,28 +45,20 @@ public class ASTRenamer {
 		
 	}
 	
-	private final Launcher launcher;
 	private final CtModel model;
 	private final RenamingData typeData;
 	private final RenamingData fieldData;
 	private final RenamingData methodData;
 	private final RenamingData parameterData;
 	private final RenamingData localVariableData;
+	private final List<Type> types;
 	
-	public ASTRenamer(String path) {
-		this(path, true);
+	public ASTRenamer(String path, Set<String> excludedTypeNames, boolean keepComments, boolean includeCount) {
+		this(path, excludedTypeNames, keepComments, includeCount, false);
 	}
 	
-	public ASTRenamer(String path, boolean keepComments) {
-		this(path, keepComments, true, false);
-	}
-	
-	public ASTRenamer(String path, boolean keepComments, boolean includeCount) {
-		this(path, keepComments, includeCount, false);
-	}
-	
-	public ASTRenamer(String path, boolean keepComments, boolean includeCount, boolean countGlobally) {
-		this(path, keepComments,
+	public ASTRenamer(String path, Set<String> excludedTypeNames, boolean keepComments, boolean includeCount, boolean countGlobally) {
+		this(path, excludedTypeNames, keepComments,
 				includeCount, includeCount, includeCount, includeCount, includeCount,
 				countGlobally, countGlobally, countGlobally, countGlobally, countGlobally,
 				"__type__", "__field__", "__method__", "__parameter__", "__localVariable__");
@@ -77,12 +68,12 @@ public class ASTRenamer {
 	//  then return the model in "rename"; also, this would mean that we lose the state, so methods like "toString" and
 	//  "getTopLevelTypes" would not make sense afterwards anymore (ast.ASTRenamer is stateless w.r.t. to the renamed models)
 	public ASTRenamer(
-			String path, boolean keepComments,
+			String path, Set<String> excludedTypeNames, boolean keepComments,
 			boolean includeTypeCount, boolean includeFieldCount, boolean includeMethodCount, boolean includeParameterCount, boolean includeLocalVariableCount,
 			boolean countTypesGlobally, boolean countFieldsGlobally, boolean countMethodsGlobally, boolean countParametersGlobally, boolean countLocalVariablesGlobally,
 			String typeTemplate, String fieldTemplate, String methodTemplate, String parameterTemplate, String localVariableTemplate
 	) {
-		this.launcher = new Launcher();
+		Launcher launcher = new Launcher();
 		// path can be a folder or a file
 		// addInputResource can be called several times
 		launcher.addInputResource(path);
@@ -98,21 +89,26 @@ public class ASTRenamer {
 		methodData = new RenamingData(includeMethodCount, countMethodsGlobally, methodTemplate);
 		parameterData = new RenamingData(includeParameterCount, countParametersGlobally, parameterTemplate);
 		localVariableData = new RenamingData(includeLocalVariableCount, countLocalVariablesGlobally, localVariableTemplate);
-	}
-	
-	// TODO: temp!
-	public CtType<?> renameType(CtType<?> type) {
-		CtType<?> copiedType = type.clone(); //Refactoring.copyType(type);
-		rename(List.of(copiedType), typeData, (ctType, newName) -> {
-			Refactoring.changeTypeName(ctType, newName);
-			renameTypeInternals(ctType);
+		
+		// For some reason, copying the types and then renaming them does not work properly (some fields are not
+		// correctly renamed), so rename the original types in-place and simply keep the (non-renamed) copies as
+		// original. This can only be done once, so perform the operation right here in the constructor
+		Collection<CtType<?>> allTypes = model.getAllTypes();
+		List<Type> originalAndRenamed = new ArrayList<>();
+		allTypes.stream().filter(ctType -> !excludedTypeNames.contains(ctType.getSimpleName())).forEach(ctType -> {
+			CtType<?> copy = ctType.clone();
+			renameType(ctType); // in-place renaming of "ctType" ("copy" retains original data)
+			originalAndRenamed.add(new Type(copy, ctType));
 		});
-		return copiedType;
+		types = Collections.unmodifiableList(originalAndRenamed);
 	}
 	
-	public void rename() {
-		// "model.getAllTypes()" only identified top-level types (not nested types), so filter by type
-		rename(model.getElements(new TypeFilter<>(CtType.class)), typeData, (ctType, newName) -> {
+	public List<Type> getTypes() {
+		return types;
+	}
+	
+	private void renameType(CtType<?> type) {
+		rename(List.of(type), typeData, (ctType, newName) -> {
 			Refactoring.changeTypeName(ctType, newName);
 			renameTypeInternals(ctType);
 		});
@@ -122,16 +118,29 @@ public class ASTRenamer {
 		rename(ctType.getFields(), fieldData, (ctField, newName) -> new CtRenameGenericVariableRefactoring().setTarget(ctField).setNewName(newName).refactor());
 		rename(ctType.getMethods(), methodData, (ctMethod, newName) -> {
 			Refactoring.changeMethodName(ctMethod, newName);
-			renameMethodInternals(ctMethod);
+			renameMethodOrConstructorInternals(ctMethod);
 		});
+		// Just reuse methodData (we actually do not need to create a constructor/type new name, since this  was already
+		// done in renameType(type) at Refactoring.changeTypeName(ctType, newName))
+		rename(getConstructors(ctType), methodData, (ctConstructor, newName) -> renameMethodOrConstructorInternals(ctConstructor));
+		ctType.getNestedTypes().forEach(this::renameType);
 	}
 	
-	private void renameMethodInternals(CtMethod<?> ctMethod) {
-		rename(ctMethod.getParameters(), parameterData, (ctParameter, newName) -> new CtRenameGenericVariableRefactoring().setTarget(ctParameter).setNewName(newName).refactor());
-		rename(ctMethod.getElements(new TypeFilter<>(CtLocalVariable.class)), localVariableData, (ctLocalVariable, newName) -> {
-			// this performs a check for valid renaming
-//			Refactoring.changeLocalVariableName(ctLocalVariable, newName);
-			// this does not perform a check for valid renaming
+	private static List<CtConstructor<?>> getConstructors(CtType<?> ctType) {
+		List<CtConstructor<?>> constructors = new ArrayList<>();
+		for (CtTypeMember typeMember : ctType.getTypeMembers()) {
+			if (typeMember instanceof CtConstructor) {
+				constructors.add((CtConstructor<?>) typeMember);
+			}
+		}
+		return constructors;
+	}
+	
+	private void renameMethodOrConstructorInternals(CtExecutable<?> ctExecutable) {
+		rename(ctExecutable.getParameters(), parameterData, (ctParameter, newName) -> new CtRenameGenericVariableRefactoring().setTarget(ctParameter).setNewName(newName).refactor());
+		rename(ctExecutable.getElements(new TypeFilter<>(CtLocalVariable.class)), localVariableData, (ctLocalVariable, newName) -> {
+			// Compared to Refactoring.changeLocalVariableName(ctLocalVariable, newName), this does not perform a check
+			// for valid renaming, which is fine since this can happen with according settings (e.g., no counts)
 			new CtRenameGenericVariableRefactoring().setTarget(ctLocalVariable).setNewName(newName).refactor();
 		});
 	}
@@ -153,21 +162,6 @@ public class ASTRenamer {
 			sb.append("\n\n");
 		}
 		return sb.toString();
-	}
-	
-	public List<CtType<?>> getTopLevelTypes() {
-		// TODO: stream?? model.getAllTypes().stream().map(CtType::clone).toList() does not work
-		List<CtType<?>> copies = new ArrayList<>();
-		model.getAllTypes().forEach(c -> copies.add(c.clone()));
-		return Collections.unmodifiableList(copies);
-	}
-	
-	public void writeToFile() {
-		// TODO: parameterize
-		// TODO: maybe do not even use "launcher" but just do everything manually like:
-		//   for (CtType<?> ctType : model.getAllTypes()) {
-		//       write ctType.toString to file (with same name as this ctType)
-		launcher.prettyprint();
 	}
 	
 }
