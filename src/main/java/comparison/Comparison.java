@@ -34,7 +34,7 @@ public class Comparison {
 				FolderComparison comparison = compareFolders(p.getLeft(), p.getRight(), excludedTypeNames, verbosity);
 				pb.step();
 				return comparison;
-			}).toList();
+			}).filter(Objects::nonNull).toList();
 		}
 	}
 	
@@ -55,6 +55,11 @@ public class Comparison {
 //		renamer2.rename();
 		List<CtType<?>> types1 = renamer1.getTopLevelTypes().stream().filter(t -> !excludedTypeNames.contains(t.getSimpleName())).toList();
 		List<CtType<?>> types2 = renamer2.getTopLevelTypes().stream().filter(t -> !excludedTypeNames.contains(t.getSimpleName())).toList();
+		
+		// Cannot make a comparison without having at least one type in each folder
+		if (types1.isEmpty() || types2.isEmpty()) {
+			return null;
+		}
 		
 		FolderComparison folderComparison = new FolderComparison(folder1, folder2);
 		for (CtType<?> type1 : types1) {
