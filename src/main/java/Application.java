@@ -1,5 +1,5 @@
 import comparison.CSVCreation;
-import comparison.Comparison;
+import comparison.Comparer;
 import comparison.FolderComparison;
 import comparison.TypeComparison;
 import detection.AvgPlagiarismDetection;
@@ -21,7 +21,7 @@ public class Application {
 		ap.addSetArgument("--excludedTypeNames", Set.of());
 		ap.addArgument("--csvPath", Path::of, null);
 		ap.addArgument("--avgThreshold", Double::parseDouble);
-		ap.addArgument("--verbosity", Integer::parseInt, 0);
+		ap.addBooleanArgument("--parallel");
 		ap.addMutuallyExclusiveArguments("--submissionsZip", "--folders");
 		ap.parse(args);
 		
@@ -33,8 +33,9 @@ public class Application {
 			folders = ap.get("--folders");
 		}
 		Set<String> excludedTypeNames = ap.get("--excludedTypeNames");
-		int verbosity = ap.get("--verbosity");
-		List<FolderComparison> comparisons = Comparison.compare(folders, excludedTypeNames, verbosity);
+		boolean parallel = ap.get("--parallel");
+		Comparer comparer = new Comparer(parallel);
+		List<FolderComparison> comparisons = comparer.compare(folders, excludedTypeNames);
 		
 		Path csvPath = ap.get("--csvPath");
 		if (csvPath != null) {
