@@ -13,6 +13,17 @@ public class TypeMatcher {
 	
 	private final List<TypeComparisonScorer> typeComparisonScorers;
 	
+	/**
+	 * Creates a new instance with the following default list of {@link TypeComparisonScorer}s:
+	 * <ul>
+	 *     <li>{@link ASTDiffScorer#ASTDiffScorer(boolean) ASTDiffScorer(false)}</li>
+	 *     <li>{@link ASTDiffScorer#ASTDiffScorer(boolean) ASTDiffScorer(true)}</li>
+	 *     <li>{@link ASTCountDiffScorer#ASTCountDiffScorer(boolean) ASTCountDiffScorer(false)}</li>
+	 *     <li>{@link LevenshteinNameScorer}</li>
+	 * </ul>
+	 *
+	 * @see #TypeMatcher(List)
+	 */
 	public TypeMatcher() {
 		this(List.of(
 				new ASTDiffScorer(false),
@@ -22,10 +33,25 @@ public class TypeMatcher {
 		));
 	}
 	
+	/**
+	 * Creates a new instance with the specified <code>typeComparisonScorers</code>.
+	 *
+	 * @param typeComparisonScorers The list of {@link TypeComparisonScorer}s to compute scores for all possible pairs
+	 *                              of types in {@link #findMatchingType(Type, List)}
+	 */
 	public TypeMatcher(List<TypeComparisonScorer> typeComparisonScorers) {
 		this.typeComparisonScorers = typeComparisonScorers;
 	}
 	
+	/**
+	 * Using the {@link TypeComparisonScorer}s specified in the constructor ({@link #TypeMatcher(List)}), returns one
+	 * type out of <code>candidates</code> which is identified as the best match for <code>type</code>.
+	 *
+	 * @param type       The type to search a matching candidate for
+	 * @param candidates The list of possible candidates, out of which a single one will be selected as the one that
+	 *                   matches <code>type</code> best
+	 * @return A single type out of <code>candidates</code> that best matches <code>type</code>
+	 */
 	public Type findMatchingType(Type type, List<Type> candidates) {
 		if (candidates.isEmpty()) {
 			throw new IllegalArgumentException("candidates must not be empty");

@@ -15,11 +15,27 @@ import java.util.stream.Stream;
 public class Comparer {
 	
 	private final TypeMatcher typeMatcher;
-	private final boolean parallel;
 	private final List<MetricScorer> metricScorers;
+	private final boolean parallel;
 	
+	/**
+	 * Creates a new instance with a default {@link TypeMatcher#TypeMatcher() TypeMatcher} and the following default
+	 * list of {@link MetricScorer}s:
+	 * <ul>
+	 *     <li>{@link ASTDiffMetricScorer#ASTDiffMetricScorer(boolean) ASTDiffMetricScorer(false)}</li>
+	 *     <li>{@link ASTDiffMetricScorer#ASTDiffMetricScorer(boolean) ASTDiffMetricScorer(true)}</li>
+	 *     <li>{@link ASTCountDiffMetricScorer#ASTCountDiffMetricScorer(boolean) ASTDiffMetricScorer(false)}</li>
+	 *     <li>{@link JaccardMetricScorer#JaccardMetricScorer(boolean) JaccardMetricScorer(false)}</li>
+	 *     <li>{@link JaccardMetricScorer#JaccardMetricScorer(boolean) JaccardMetricScorer(true)}</li>
+	 *     <li>{@link JaroWinklerMetricScorer#JaroWinklerMetricScorer(boolean) JaroWinklerMetricScorer(false)}</li>
+	 *     <li>{@link JaroWinklerMetricScorer#JaroWinklerMetricScorer(boolean) JaroWinklerMetricScorer(true)}</li>
+	 * </ul>
+	 *
+	 * @param parallel Whether to use parallelism
+	 * @see #Comparer(TypeMatcher, List, boolean)
+	 */
 	public Comparer(boolean parallel) {
-		this(new TypeMatcher(), parallel, List.of(
+		this(new TypeMatcher(), List.of(
 				new ASTDiffMetricScorer(false),
 				new ASTDiffMetricScorer(true),
 				new ASTCountDiffMetricScorer(false),
@@ -27,15 +43,36 @@ public class Comparer {
 				new JaccardMetricScorer(true),
 				new JaroWinklerMetricScorer(false),
 				new JaroWinklerMetricScorer(true)
-		));
+		), parallel);
 	}
 	
-	public Comparer(TypeMatcher typeMatcher, boolean parallel, List<MetricScorer> metricScorers) {
+	/**
+	 * Creates a new instance using the specified arguments.
+	 *
+	 * @param typeMatcher   The type matcher to use when comparing the individual types of two folders in
+	 *                      {@link #compare(List, Set)}. For any two folders, this will result in pairs of matching
+	 *                      types
+	 * @param metricScorers The list of {@link MetricScorer}s to compute metrics for each identified pair of matching
+	 *                      types (see <code>typeMatcher</code>)
+	 * @param parallel      Whether to use parallelism
+	 */
+	public Comparer(TypeMatcher typeMatcher, List<MetricScorer> metricScorers, boolean parallel) {
 		this.typeMatcher = typeMatcher;
-		this.parallel = parallel;
 		this.metricScorers = metricScorers;
+		this.parallel = parallel;
 	}
 	
+	/**
+	 * Using the {@link TypeMatcher} and {@link MetricScorer}s specified in the constructor
+	 * ({@link #Comparer(TypeMatcher, List, boolean)}), creates all possible combinations of two folders taken from the
+	 * list <code>folders</code> and computes a {@link FolderComparison} for each of those folder pairs. In case any of
+	 * the two folders within a folder pair does not contain any types that could be compared, this folder pair is
+	 * dropped and no comparison is computed.
+	 *
+	 * @param folders           The list of folders for which all possible pairs will be created and used for comparison
+	 * @param excludedTypeNames The set of type names that should be excluded from any comparison within two folders
+	 * @return A list of {@link FolderComparison}s for each folder pair
+	 */
 	public List<FolderComparison> compare(List<String> folders, Set<String> excludedTypeNames) {
 		List<Pair<String, String>> folderPairs = new ArrayList<>();
 		for (int i = 0; i < folders.size() - 1; i++) {
