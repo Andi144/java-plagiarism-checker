@@ -1,8 +1,8 @@
 package comparison;
 
+import comparison.scoring.metrics.MetricScorer;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.StringEscapeUtils;
-import spoon.reflect.declaration.CtType;
 
 import java.util.Collections;
 import java.util.List;
@@ -12,9 +12,9 @@ public class TypeComparison {
 	
 	private final String type1;
 	private final String type2;
-	private final List<Pair<String, Double>> metrics;
+	private final List<Pair<MetricScorer, Double>> metrics;
 	
-	public TypeComparison(String type1, String type2, List<Pair<String, Double>> metrics) {
+	public TypeComparison(String type1, String type2, List<Pair<MetricScorer, Double>> metrics) {
 		this.type1 = type1;
 		this.type2 = type2;
 		this.metrics = metrics;
@@ -28,7 +28,7 @@ public class TypeComparison {
 		return type2;
 	}
 	
-	public List<Pair<String, Double>> getMetrics() {
+	public List<Pair<MetricScorer, Double>> getMetrics() {
 		return Collections.unmodifiableList(metrics);
 	}
 	
@@ -36,7 +36,7 @@ public class TypeComparison {
 		StringBuilder sb = new StringBuilder("type1,type2");
 		metrics.forEach(pair -> {
 			sb.append(",");
-			sb.append(StringEscapeUtils.escapeCsv(pair.getLeft()));
+			sb.append(StringEscapeUtils.escapeCsv(pair.getLeft().getName()));
 		});
 		return sb.toString();
 	}

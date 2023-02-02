@@ -104,15 +104,15 @@ public class Comparer {
 		FolderComparison folderComparison = new FolderComparison(folder1, folder2);
 		for (Type type1 : types1) {
 			Type matchingType = typeMatcher.findMatchingType(type1, types2);
-			List<Pair<String, Double>> metrics = computeMetrics(type1, matchingType);
+			List<Pair<MetricScorer, Double>> metrics = computeMetrics(type1, matchingType);
 			folderComparison.addTypeComparison(new TypeComparison(type1.getOriginalName(), matchingType.getOriginalName(), metrics));
 		}
 		return folderComparison;
 	}
 	
-	private List<Pair<String, Double>> computeMetrics(Type type1, Type type2) {
+	private List<Pair<MetricScorer, Double>> computeMetrics(Type type1, Type type2) {
 		return metricScorers.stream()
-				.map(s -> Pair.of(s.getName(), s.computeComparisonScore(type1, type2)))
+				.map(s -> Pair.of(s, s.computeComparisonScore(type1, type2)))
 				.toList();
 	}
 	
