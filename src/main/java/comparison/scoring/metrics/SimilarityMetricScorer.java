@@ -7,8 +7,8 @@ public abstract class SimilarityMetricScorer extends MetricScorer {
 	
 	private final SimilarityScore<Double> similarityScore;
 	
-	public SimilarityMetricScorer(boolean useRenamed, String name, SimilarityScore<Double> similarityScore) {
-		super(useRenamed, name);
+	public SimilarityMetricScorer(boolean useRenamed, SimilarityScore<Double> similarityScore) {
+		super(useRenamed);
 		this.similarityScore = similarityScore;
 	}
 	

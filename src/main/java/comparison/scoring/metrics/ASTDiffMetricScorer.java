@@ -10,7 +10,7 @@ public class ASTDiffMetricScorer extends MetricScorer {
 	private final ASTDiffScorer astDiffScorer;
 	
 	public ASTDiffMetricScorer(boolean useRenamed) {
-		super(useRenamed, useRenamed ? "RenamedASTDiffMetric" : "ASTDiffMetric");
+		super(useRenamed);
 		astDiffScorer = new ASTDiffScorer(useRenamed);
 	}
 	

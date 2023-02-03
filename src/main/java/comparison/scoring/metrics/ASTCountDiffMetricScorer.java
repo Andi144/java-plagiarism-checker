@@ -6,7 +6,7 @@ import spoon.reflect.declaration.CtType;
 public class ASTCountDiffMetricScorer extends MetricScorer {
 	
 	public ASTCountDiffMetricScorer(boolean useRenamed) {
-		super(useRenamed, useRenamed ? "RenamedASTCountDiffMetric" : "ASTCountDiffMetric");
+		super(useRenamed);
 	}
 	
 	@Override

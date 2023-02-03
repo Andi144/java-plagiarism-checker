@@ -9,7 +9,7 @@ import spoon.reflect.declaration.CtType;
  */
 public abstract class OriginalAndRenamedScorer implements TypeComparisonScorer {
 	
-	private final boolean useRenamed;
+	protected final boolean useRenamed;
 	
 	public OriginalAndRenamedScorer(boolean useRenamed) {
 		this.useRenamed = useRenamed;

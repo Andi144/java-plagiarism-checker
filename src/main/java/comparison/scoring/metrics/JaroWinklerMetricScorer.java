@@ -5,7 +5,7 @@ import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 public class JaroWinklerMetricScorer extends SimilarityMetricScorer {
 	
 	public JaroWinklerMetricScorer(boolean useRenamed) {
-		super(useRenamed, useRenamed ? "RenamedJaroWinklerMetric" : "JaroWinklerMetric", new JaroWinklerSimilarity());
+		super(useRenamed, new JaroWinklerSimilarity());
 	}
 	
 }
