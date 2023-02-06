@@ -1,30 +1,30 @@
 package comparison.scoring.metrics;
 
 import ast.ASTUtil;
-import ast.Type;
-import comparison.scoring.ASTDiffScorer;
+import gumtree.spoon.AstComparator;
+import gumtree.spoon.diff.Diff;
 import spoon.reflect.declaration.CtType;
 
 public class ASTDiffMetricScorer extends MetricScorer {
 	
-	private final ASTDiffScorer astDiffScorer;
+	private final AstComparator comparator;
 	
 	public ASTDiffMetricScorer(boolean useRenamed) {
-		super(useRenamed);
-		astDiffScorer = new ASTDiffScorer(useRenamed);
+		this(useRenamed, new AstComparator());
 	}
 	
-	@Override
-	public double computeComparisonScore(Type type1, Type type2) {
-		double astDiffScore = astDiffScorer.computeComparisonScore(type1, type2);
-		return astDiffScore / super.computeComparisonScore(type1, type2);
+	public ASTDiffMetricScorer(boolean useRenamed, AstComparator comparator) {
+		super(useRenamed);
+		this.comparator = comparator;
 	}
 	
 	@Override
 	protected double computeComparisonScore(CtType<?> type1, CtType<?> type2) {
+		Diff typeDiff = comparator.compare(type1, type2);
+		int diff = typeDiff.getRootOperations().size();
 		int count1 = ASTUtil.countElements(type1);
 		int count2 = ASTUtil.countElements(type2);
-		return Math.max(count1, count2);
+		return (double) diff / Math.max(count1, count2);
 	}
 	
 }
