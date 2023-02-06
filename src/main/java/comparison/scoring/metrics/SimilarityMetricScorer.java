@@ -14,6 +14,7 @@ public abstract class SimilarityMetricScorer extends MetricScorer {
 	
 	@Override
 	protected double computeComparisonScore(CtType<?> type1, CtType<?> type2) {
+		// TODO: SimilarityScore<Double> might have values > 1 (see interface documentation)
 		return 1 - similarityScore.apply(type1.toString(), type2.toString());
 	}
 	
