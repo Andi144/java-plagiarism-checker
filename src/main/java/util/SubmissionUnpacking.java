@@ -116,7 +116,12 @@ public class SubmissionUnpacking {
 			ISimpleInArchive archive = inArchive.getSimpleInterface();
 			
 			for (ISimpleInArchiveItem item : archive.getArchiveItems()) {
-				Path itemPath = parent.resolve(item.getPath());
+				// Windows-specific work around: no trailing spaces allowed, so simply replace all with an underscore
+				// (item.getPath() itself could contain multiple directory hierarchies, but instead of splitting them
+				// and then handling each individual path element by checking if it ends with a space, just do the
+				// replacement strategy; for the few cases, this is perfectly fine, and we do not care about the exact
+				// path creation anyway - we only need the files in some directory, ultimately)
+				Path itemPath = parent.resolve(item.getPath().replace(" ", "_"));
 				
 				if (!item.isFolder()) {
 					Files.createDirectories(itemPath.getParent());  // Create intermediate directories
