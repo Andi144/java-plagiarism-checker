@@ -9,6 +9,8 @@ import net.sf.sevenzipjbinding.impl.RandomAccessFileInStream;
 import net.sf.sevenzipjbinding.simple.ISimpleInArchive;
 import net.sf.sevenzipjbinding.simple.ISimpleInArchiveItem;
 import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -19,10 +21,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
 
 public class SubmissionUnpacking {
+	
+	private static final Logger LOGGER = LoggerFactory.getLogger(SubmissionUnpacking.class);
 	
 	/**
 	 * Same as {@link #unpackMoodleSubmissions(Path submissionsZip, Path unpackDir)} with <code>unpackDir</code> set to
@@ -82,20 +88,30 @@ public class SubmissionUnpacking {
 		
 		// Second, we need to unpack these individual student submission ZIP files to get to the actual data. For each
 		// such ZIP file, we will get a student submission directory where the unpacked contents are stored. These
-		// directories are the one that we want to ultimately return
+		// directories are the one that we want to ultimately return, but only if there are no archive problems. If
+		// there are, we exclude these directories from the final return list
+		Set<Path> dirsToSkip = new HashSet<>();
 		Files.walkFileTree(unpackDir, new SimpleFileVisitor<>() {
 			@Override
 			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-				extract(file);
+				try {
+					extract(file);
+				} catch (SevenZipException ex) {
+					LOGGER.error("skipping file '{}' because of archive problems: {}", file, ex.getMessage(), ex);
+					dirsToSkip.add(file.getParent().toAbsolutePath().normalize());
+				}
 				// We do not need the student submission ZIP file, we only need the actual data
 				Files.delete(file);
 				return super.visitFile(file, attrs);
 			}
 		});
 		
-		// Finally, return all the unpacked student submission directories
+		// Finally, return all the unpacked student submission directories (i.e., those without archive problems)
 		try (Stream<Path> dirs = Files.list(unpackDir)) {
-			return dirs.map(path -> path.toAbsolutePath().toString()).toList();
+			return dirs.map(dir -> dir.toAbsolutePath().normalize())
+					.filter(dir -> !dirsToSkip.contains(dir))
+					.map(Path::toString)
+					.toList();
 		}
 	}
 	
