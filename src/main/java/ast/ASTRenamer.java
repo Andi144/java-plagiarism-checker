@@ -5,10 +5,7 @@ import spoon.refactoring.CtRenameGenericVariableRefactoring;
 import spoon.refactoring.Refactoring;
 import spoon.reflect.CtModel;
 import spoon.reflect.code.CtLocalVariable;
-import spoon.reflect.declaration.CtConstructor;
-import spoon.reflect.declaration.CtExecutable;
-import spoon.reflect.declaration.CtType;
-import spoon.reflect.declaration.CtTypeMember;
+import spoon.reflect.declaration.*;
 import spoon.reflect.visitor.filter.TypeFilter;
 
 import java.util.*;
@@ -115,7 +112,9 @@ public class ASTRenamer {
 	}
 	
 	private void renameTypeInternals(CtType<?> ctType) {
-		rename(ctType.getFields(), fieldData, (ctField, newName) -> new CtRenameGenericVariableRefactoring().setTarget(ctField).setNewName(newName).refactor());
+		rename(ctType.getFields().stream()
+				.filter(ctField -> !(ctField instanceof CtEnumValue)) // Renaming CtEnumValue fields is not supported by spoon
+				.toList(), fieldData, (ctField, newName) -> new CtRenameGenericVariableRefactoring().setTarget(ctField).setNewName(newName).refactor());
 		rename(ctType.getMethods(), methodData, (ctMethod, newName) -> {
 			Refactoring.changeMethodName(ctMethod, newName);
 			renameMethodOrConstructorInternals(ctMethod);
