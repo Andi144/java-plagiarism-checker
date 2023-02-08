@@ -136,8 +136,9 @@ public class SubmissionUnpacking {
 				// (item.getPath() itself could contain multiple directory hierarchies, but instead of splitting them
 				// and then handling each individual path element by checking if it ends with a space, just do the
 				// replacement strategy; for the few cases, this is perfectly fine, and we do not care about the exact
-				// path creation anyway - we only need the files in some directory, ultimately)
-				Path itemPath = parent.resolve(item.getPath().replace(" ", "_"));
+				// path creation anyway - we only need the files in some directory, ultimately); same for other invalid
+				// Windows path characters
+				Path itemPath = parent.resolve(item.getPath().replaceAll("[\\\\/:*?\"<>| ]", "_"));
 				
 				if (!item.isFolder()) {
 					Files.createDirectories(itemPath.getParent());  // Create intermediate directories
