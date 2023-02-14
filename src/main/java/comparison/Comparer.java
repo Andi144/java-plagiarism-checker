@@ -105,7 +105,13 @@ public class Comparer {
 		for (Type type1 : types1) {
 			Type matchingType = typeMatcher.findMatchingType(type1, types2);
 			List<Pair<MetricScorer, Double>> metrics = computeMetrics(type1, matchingType);
-			folderComparison.addTypeComparison(new TypeComparison(type1.getOriginalName(), matchingType.getOriginalName(), metrics));
+			folderComparison.addTypeComparison(new TypeComparison(
+					type1.original().getPosition().getCompilationUnit().getFile().toPath(),
+					matchingType.original().getPosition().getCompilationUnit().getFile().toPath(),
+					type1.getOriginalName(),
+					matchingType.getOriginalName(),
+					metrics
+			));
 		}
 		return folderComparison;
 	}
