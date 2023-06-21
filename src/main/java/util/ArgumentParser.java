@@ -138,20 +138,23 @@ public class ArgumentParser {
 	
 	private static class BooleanArgument extends Argument<Boolean> {
 		
-		BooleanArgument(String name) {
+		final boolean specifiedValue;
+		
+		BooleanArgument(String name, boolean specifiedValue) {
 			super(name);
+			this.specifiedValue = specifiedValue;
 		}
 		
 		@Override
 		Pair<Integer, Boolean> extract(int i, String[] args) {
-			// If the argument is specified, return true
-			return Pair.of(i + 1, true);
+			// If the argument is specified, return the corresponding value
+			return Pair.of(i + 1, specifiedValue);
 		}
 		
 		@Override
 		Boolean getDefault() {
-			// If the argument is not specified, return false
-			return false;
+			// If the argument is not specified, return the negation
+			return !specifiedValue;
 		}
 		
 	}
@@ -358,8 +361,20 @@ public class ArgumentParser {
 	 * @param name The name of the argument
 	 */
 	public void addBooleanArgument(String name) {
+		addBooleanArgument(name, true);
+	}
+	
+	/**
+	 * Adds an optional boolean argument, i.e., a flag/toggle. If it is specified, its value will be
+	 * <code>specifiedValue</code> and <code>!specifiedValue</code> otherwise (i.e., if it is not specified).
+	 *
+	 * @param name           The name of the argument
+	 * @param specifiedValue The boolean value if the argument is specified. If it is not specified, the negated value
+	 *                       will be used instead
+	 */
+	public void addBooleanArgument(String name, boolean specifiedValue) {
 		ensureNewArgumentName(name);
-		arguments.put(name, new BooleanArgument(name));
+		arguments.put(name, new BooleanArgument(name, specifiedValue));
 	}
 	
 	private void ensureNewArgumentName(String name) {
