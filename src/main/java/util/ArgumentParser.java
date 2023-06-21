@@ -66,7 +66,7 @@ public class ArgumentParser {
 			// [i + 2] = next arg name
 			// Disallow that the value of this argument here is equal to another, already specified argument name. This
 			// could cause tricky errors, e.g., if we allowed another argument name "x" as value here, then it would be
-			// consumed. Afterwards, an exception would be raised because "x" could not be found, which might cause
+			// consumed. Afterward, an exception would be raised because "x" could not be found, which might cause
 			// confusion to users, since they did indeed specify "x", just that it was done incorrectly, so better not
 			// allow it in the first place
 			if (i + 1 >= args.length || arguments.containsKey(args[i + 1])) {
