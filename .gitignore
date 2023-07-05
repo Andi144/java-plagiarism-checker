@@ -6,3 +6,7 @@
 
 # IDEA
 .idea
+
+# Jupyter and Python
+**/.ipynb_checkpoints/
+*.pyc
