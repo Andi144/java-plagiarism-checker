@@ -9,11 +9,15 @@ class SelectFileButton(widgets.Button):
     
     def __init__(self):
         super().__init__()
-        self.description = "Select File"
-        self.icon = "square-o"
-        self.style.button_color = "orange"
+        self._set_default(self)
         self.on_click(self.select_files)
-        self.file = None
+    
+    @staticmethod
+    def _set_default(button: widgets.Button):
+        button.description = "Select File"
+        button.icon = "square-o"
+        button.style.button_color = "orange"
+        button.file = None
     
     @staticmethod
     def select_files(button: widgets.Button):
@@ -29,3 +33,5 @@ class SelectFileButton(widgets.Button):
             button.description = "File Selected"
             button.icon = "check-square-o"
             button.style.button_color = "lightgreen"
+        else:
+            SelectFileButton._set_default(button)
